@@ -108,6 +108,11 @@ if (!svar.ok) {
 }
 
 const produkter = await svar.json();
+  const feltext = await svar.text();
+  throw new Error("Supabase-fel " + svar.status + ": " + feltext);
+}
+
+const produkter = await svar.json();
 
 if (!Array.isArray(produkter)) {
   throw new Error("Supabase skickade ingen produktlista");
