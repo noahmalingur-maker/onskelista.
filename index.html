@@ -9,51 +9,71 @@
 * { box-sizing: border-box; }
 body {
   margin: 0;
-  background: #0d0f14;
-  color: white;
+  background: #0c0e13;
+  color: #fff;
   font-family: Arial, sans-serif;
 }
 header {
   text-align: center;
-  padding: 65px 20px 35px;
+  padding: 70px 20px 30px;
 }
-h1 { font-size: 38px; margin-bottom: 10px; }
-header p { color: #a0a5b0; }
+h1 {
+  font-size: clamp(32px, 6vw, 52px);
+  margin: 0 0 12px;
+}
+header p { color: #a3a8b5; }
 .produkter {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 22px;
-  max-width: 1050px;
-  margin: auto;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 24px;
+  max-width: 1100px;
   padding: 25px;
+  margin: auto;
 }
 .kort {
-  background: #1c2029;
-  padding: 15px;
+  background: #1b1f28;
+  border: 1px solid #30343d;
   border-radius: 20px;
-  transition: transform .2s;
+  padding: 15px;
+  transition: transform .2s, border-color .2s;
 }
-.kort:hover { transform: translateY(-5px); }
+.kort:hover {
+  transform: translateY(-5px);
+  border-color: #737b8e;
+}
 .bild {
-  background: #303540;
+  width: 100%;
   height: 260px;
+  object-fit: cover;
   border-radius: 14px;
+  background: #303540;
+}
+.platshallare {
   display: flex;
-  align-items: center;
   justify-content: center;
-  color: #aaa;
+  align-items: center;
+  color: #b4bac7;
 }
 h2 { font-size: 19px; }
-.pris { color: #b9c0ce; }
+.pris {
+  color: #b9c0ce;
+  margin-bottom: 20px;
+}
 .knapp {
   display: block;
   background: white;
-  color: black;
+  color: #111;
   text-decoration: none;
   text-align: center;
   padding: 14px;
   border-radius: 12px;
   font-weight: bold;
+}
+.knapp:hover { background: #dce2ef; }
+#status {
+  text-align: center;
+  color: #a3a8b5;
+  padding: 25px;
 }
 </style>
 </head>
@@ -62,17 +82,93 @@ h2 { font-size: 19px; }
   <h1>Min önskelista ✨</h1>
   <p>Alla saker jag önskar mig</p>
 </header>
-<main class="produkter">
-  <article class="kort">
-    <div class="bild">Produktbild kommer snart</div>
-    <h2>Cherub Washed Hoodie</h2>
-    <p class="pris">2K WRLD</p>
-    <a class="knapp"
-       href="https://2kwrld.com/products/cherub-washed-hoodie-1?variant=53898148512077"
-       target="_blank" rel="noopener noreferrer">
-       Visa produkt ↗
-    </a>
-  </article>
-</main>
+
+<main id="produkter" class="produkter"></main>
+<p id="status">Laddar önskelistan...</p>
+
+<script>
+const SUPABASE_URL =
+  "https://okxsjemvfyjvwcfgqvbj.supabase.co";
+const SUPABASE_KEY =
+  "sb_publishable_rhmzBVDnUgnyCZ5mHBWYmA_bo8gFQEh";
+
+async function laddaProdukter() {
+  const status = document.getElementById("status");
+  const container = document.getElementById("produkter");
+
+  try {
+    const svar = await fetch(
+      SUPABASE_URL + "/rest/v1/products?select=*&order=id.desc",
+      {
+        headers: {
+          apikey: SUPABASE_KEY
+        }
+      }
+    );
+
+    if (!svar.ok) throw new Error("Kunde inte läsa produkter");
+
+    const produkter = await svar.json();
+    container.replaceChildren();
+
+    if (produkter.length === 0) {
+      status.textContent = "Inga önskningar ännu.";
+      return;
+    }
+
+    status.textContent = "";
+
+    for (const produkt of produkter) {
+      const kort = document.createElement("article");
+      kort.className = "kort";
+
+      if (produkt.image_url &&
+          /^https?:\/\//i.test(produkt.image_url)) {
+        const bild = document.createElement("img");
+        bild.className = "bild";
+        bild.src = produkt.image_url;
+        bild.alt = produkt.name;
+        bild.loading = "lazy";
+        kort.appendChild(bild);
+      } else {
+        const bild = document.createElement("div");
+        bild.className = "bild platshallare";
+        bild.textContent = "Ingen bild ännu";
+        kort.appendChild(bild);
+      }
+
+      const namn = document.createElement("h2");
+      namn.textContent = produkt.name;
+      kort.appendChild(namn);
+
+      if (produkt.price) {
+        const pris = document.createElement("p");
+        pris.className = "pris";
+        pris.textContent = produkt.price;
+        kort.appendChild(pris);
+      }
+
+      if (produkt.product_url &&
+          /^https?:\/\//i.test(produkt.product_url)) {
+        const knapp = document.createElement("a");
+        knapp.className = "knapp";
+        knapp.href = produkt.product_url;
+        knapp.target = "_blank";
+        knapp.rel = "noopener noreferrer";
+        knapp.textContent = "Visa produkt ↗";
+        kort.appendChild(knapp);
+      }
+
+      container.appendChild(kort);
+    }
+  } catch (fel) {
+    status.textContent =
+      "Kunde inte ladda önskelistan. Försök igen senare.";
+    console.error(fel);
+  }
+}
+
+laddaProdukter();
+</script>
 </body>
 </html>
