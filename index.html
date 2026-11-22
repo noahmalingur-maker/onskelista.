@@ -102,11 +102,18 @@ const svar = await fetch(
     headers: {
       "apikey": SUPABASE_KEY
     }
-  }
-);
-if (!svar.ok) throw new Error("Supabase-fel: " + svar.status);
-    container.replaceChildren();
+if (!svar.ok) {
+  const feltext = await svar.text();
+  throw new Error("Supabase-fel " + svar.status + ": " + feltext);
+}
 
+const produkter = await svar.json();
+
+if (!Array.isArray(produkter)) {
+  throw new Error("Supabase skickade ingen produktlista");
+}
+
+container.replaceChildren();
     if (produkter.length === 0) {
       status.textContent = "Inga önskningar ännu.";
       return;
