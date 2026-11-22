@@ -104,7 +104,7 @@ const svar = await fetch(
     }
   }
 );
-    const produkter = await svar.json();
+if (!svar.ok) throw new Error("Supabase-fel: " + svar.status);
     container.replaceChildren();
 
     if (produkter.length === 0) {
