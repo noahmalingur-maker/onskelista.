@@ -96,17 +96,14 @@ async function laddaProdukter() {
   const container = document.getElementById("produkter");
 
   try {
-    const svar = await fetch(
-      SUPABASE_URL + "/rest/v1/products?select=*&order=id.desc",
-      {
-        headers: {
-          apikey: SUPABASE_KEY
-        }
-      }
-    );
-
-    if (!svar.ok) throw new Error("Kunde inte läsa produkter");
-
+const svar = await fetch(
+  SUPABASE_URL + "/rest/v1/products?select=*&order=id.desc",
+  {
+    headers: {
+      "apikey": SUPABASE_KEY
+    }
+  }
+);
     const produkter = await svar.json();
     container.replaceChildren();
 
